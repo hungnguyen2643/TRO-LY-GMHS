@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trợ lý GMHS</title>
+<meta name="theme-color" content="#0b6e99">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trợ lý GMHS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mu:#5b6570;--bd:#d9dee4;--ac:#0b6e99;--ac2:#e3f2f8;--wn:#b42318;--wn2:#fdecea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1a1f25;--tx:#e8ecf0;--mu:#97a2ad;--bd:#2c343c;--ac:#5cc0e8;--ac2:#14303c;--wn:#ff8f85;--wn2:#3a1a17}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1a1f25;--tx:#e8ecf0;--mu:#97a2ad;--bd:#2c343c;--ac:#5cc0e8;--ac2:#14303c;--wn:#ff8f85;--wn2:#3a1a17}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif;max-width:720px;margin:auto;padding:12px}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mu);font-size:12px;margin-bottom:10px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+nav button{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:20px;font-size:14px}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--ac)}
+label{display:block;font-size:12px;color:var(--mu);margin:6px 0 2px}
+.row{display:flex;gap:8px}.row>div{flex:1}
+input,select{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+.out{margin-top:8px;background:var(--ac2);border-radius:8px;padding:8px 10px;font-size:14px}
+.out b{font-size:16px}
+.warn{background:var(--wn2);color:var(--wn);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:10px}
+ul{margin:4px 0;padding-left:20px}li{margin:3px 0}
+.src{font-size:11px;color:var(--mu);margin-top:6px}
+details{margin-bottom:8px}summary{font-weight:600;padding:8px 0;cursor:pointer}
+</style></head><body>
+<h1>Trợ lý Gây mê Hồi sức</h1>
+<div class="sub">Công cụ tham khảo nhanh · không thay thế phán đoán lâm sàng và phác đồ của khoa · bản rà soát 10/2026 · chạy offline, không cần mạng</div>
+<nav id="nav"></nav>
+
+<section id="calc" class="on">
+<div class="card"><h2>Thông tin bệnh nhân</h2>
+<div class="row"><div><label>Cân nặng (kg)</label><input id="w" type="number" inputmode="decimal" value="60"></div>
+<div><label>Chiều cao (cm)</label><input id="h" type="number" inputmode="decimal" value="165"></div></div>
+<div class="row"><div><label>Giới</label><select id="sx"><option value="m">Nam</option><option value="f">Nữ</option></select></div>
+<div><label>Tuổi (năm)</label><input id="age" type="number" inputmode="decimal" value="40"></div></div>
+<label>Cân nặng dùng tính liều thuốc (tab Thuốc, ICU)</label><select id="wb"><option value="0">Thực tế</option><option value="1">Lý tưởng (IBW)</option><option value="2">Hiệu chỉnh (IBW + 0,4 × phần thừa)</option></select>
+<div class="out" id="o1"></div></div>
+
+<div class="card"><h2>Thông khí bảo vệ phổi</h2>
+<div class="out" id="o2"></div><div class="src">Vt 6–8 mL/kg cân nặng lý tưởng (PBW), PEEP cá thể hóa.</div></div>
+
+<div class="card"><h2>Dịch duy trì (quy tắc 4-2-1)</h2><div class="out" id="o3"></div></div>
+
+<div class="card"><h2>Lượng máu mất cho phép (MABL)</h2>
+<div class="row"><div><label>Hct ban đầu (%)</label><input id="hi" type="number" value="40"></div>
+<div><label>Hct tối thiểu chấp nhận (%)</label><input id="hf" type="number" value="25"></div></div>
+<label>Nhóm</label><select id="grp"><option value="75">Người lớn nam (75 mL/kg)</option><option value="65" selected>Người lớn nữ (65 mL/kg)</option><option value="70">Trẻ em (70 mL/kg)</option><option value="80">Nhũ nhi (80 mL/kg)</option><option value="85">Sơ sinh (85 mL/kg)</option></select>
+<div class="out" id="o4"></div><div class="src">MABL = EBV × (Hct đầu − Hct thấp nhất) / Hct đầu</div></div>
+
+<div class="card"><h2>Nhi: ống NKQ (tuổi 1–10)</h2><div class="out" id="o5"></div>
+<div class="src">Có bóng chèn: tuổi/4 + 3,5; không bóng: tuổi/4 + 4. Luôn chuẩn bị ±0,5 cỡ và kiểm tra rò khí/capnography.</div></div>
+</section>
+
+<section id="emg">
+<div class="warn">Gọi hỗ trợ trước. Nhập cân nặng ở tab “Tính toán” để có liều tự tính.</div>
+
+<div class="card"><h2>LAST – ngộ độc thuốc tê toàn thân</h2><div class="out" id="last"></div>
+<ul><li>Ngừng thuốc tê, gọi hỗ trợ, bảo vệ đường thở, 100% O₂</li>
+<li>Co giật: benzodiazepine; tránh propofol liều lớn khi huyết động không ổn định</li>
+<li>Ngừng tuần hoàn: giảm liều adrenaline xuống &lt;1 mcg/kg mỗi lần; tránh vasopressin, chẹn kênh canxi, chẹn beta, thêm thuốc tê</li>
+<li>Lipid 20% dùng sớm; chuẩn bị tuần hoàn ngoài cơ thể nếu không đáp ứng</li></ul>
+<div class="src">ASRA Checklist LAST 2020. Giới hạn ~12 mL/kg; truyền thêm ≥10 phút sau khi ổn định.</div></div>
+
+<div class="card"><h2>Tăng thân nhiệt ác tính (MH)</h2><div class="out" id="mh"></div>
+<ul><li>Ngừng thuốc mê bay hơi và succinylcholine; đổi sang TIVA; 100% O₂ lưu lượng cao (≥10 L/phút)</li>
+<li>Thông khí tăng, thay dây máy/vôi soda theo quy trình khoa; hạ thân nhiệt chủ động</li>
+<li>Điều trị tăng kali, toan (liều ở trên), loạn nhịp (tránh chẹn kênh canxi); theo dõi khí máu, kali, CK, nước tiểu, myoglobin, đông máu</li>
+<li>Gọi đường dây nóng MH địa phương/quốc tế; chuyển ICU</li></ul>
+<div class="src">MHAUS / EMHG: dantrolene 2,5 mg/kg TM, lặp lại đến khi hết triệu chứng (thường ≤10 mg/kg).</div></div>
+
+<div class="card"><h2>Phản vệ trong mổ</h2>
+<ul><li>Ngừng tác nhân nghi ngờ, gọi hỗ trợ, 100% O₂, nâng chân, truyền dịch tinh thể nhanh (người lớn 500–1000 mL bolus, trẻ em 10–20 mL/kg)</li>
+<li>Adrenaline: IM 0,3–0,5 mg (người lớn) nếu chưa có đường TM; TM chuẩn độ từng liều nhỏ (khoảng 10–50 mcg tùy mức độ), truyền liên tục khoảng 0,05–0,1 mcg/kg/phút nếu kéo dài; ngừng tuần hoàn dùng 1 mg. Trẻ em: IM 0,01 mg/kg (tối đa 0,5 mg), TM chuẩn độ khoảng 1 mcg/kg</li>
+<li>Bệnh nhân dùng chẹn beta, kháng trị: glucagon 1–5 mg TM trong 5 phút, sau đó truyền 5–15 mcg/phút</li>
+<li>Thuốc bậc hai: kháng histamine, corticoid (không thay thế adrenaline)</li>
+<li>Xét nghiệm tryptase 1–2 giờ sau khởi phát; chuyển khám dị ứng</li></ul>
+<div class="src">Liều TM khác nhau giữa các hướng dẫn (AAGBI/BSACI, ANZAAG, WAO): đối chiếu phác đồ của bệnh viện.</div></div>
+
+<div class="card"><h2>Ngừng tuần hoàn (ACLS)</h2>
+<ul><li>CPR chất lượng, ép 100–120 l/phút, hạn chế gián đoạn</li>
+<li>Nhịp sốc được: sốc điện (hai pha 120–200 J theo máy, một pha 360 J); adrenaline 1 mg sau sốc thứ 2, lặp 3–5 phút; amiodarone 300 mg rồi 150 mg (hoặc lidocaine 1–1,5 mg/kg)</li>
+<li>EtCO₂ &lt;10 mmHg kéo dài gợi ý ép tim chưa hiệu quả; tăng vọt đột ngột gợi ý có tuần hoàn tự nhiên</li>
+<li>Không sốc được: adrenaline 1 mg càng sớm càng tốt, lặp 3–5 phút</li>
+<li>Tìm nguyên nhân (H và T), trong mổ lưu ý chảy máu, tràn khí, thuốc, gây mê quá sâu</li></ul>
+<div class="src">AHA ACLS, ERC Guidelines. Đối chiếu bản cập nhật mới nhất.</div></div>
+</section>
+
+<section id="drug">
+<div class="warn">Liều người lớn khỏe mạnh, tính theo cân nặng <b id="dw"></b> (đổi ở tab Tính toán; vận mạch và thuốc tim mạch luôn dùng cân thực). Người béo phì: nhiều thuốc tính theo IBW/LBW. Giảm liều ở người già, sốc, suy tim, suy gan/thận. Chuẩn độ theo đáp ứng; đây không phải y lệnh.</div>
+<div id="dl"></div>
+<div class="src">Tổng hợp từ tờ thông tin sản phẩm (sugammadex: 2 / 4 / 16 mg/kg theo mức phong bế) và hướng dẫn ASA, AHA, ESAIC. Nồng độ pha và đường dùng theo quy trình khoa.</div>
+</section>
+
+<section id="inf">
+<div class="warn">Cân nặng đang dùng: <b id="iw"></b> kg (đổi ở tab Tính toán). Nồng độ mẫu chỉ là ví dụ, hãy theo quy định pha của khoa và kiểm tra lại đơn vị, bơm tiêm điện trước khi chạy.</div>
+<div class="card"><h2>1. Pha thuốc</h2>
+<label>Mẫu nồng độ (tùy chọn)</label><select id="ip"></select>
+<div class="row"><div><label>Lượng thuốc</label><input id="ia" type="number" inputmode="decimal" value="4"></div>
+<div><label>Đơn vị</label><select id="iau"><option value="1000">mg</option><option value="1">mcg</option><option value="iu">IU</option></select></div>
+<div><label>Tổng thể tích (mL)</label><input id="iv" type="number" inputmode="decimal" value="50"></div></div>
+<div class="out" id="ic"></div></div>
+<div class="card"><h2>2. Liều → tốc độ bơm (mL/giờ)</h2>
+<div class="row"><div><label>Liều</label><input id="id" type="number" inputmode="decimal" value="0.1"></div>
+<div><label>Đơn vị</label><select id="idu"></select></div></div>
+<div class="out" id="ir"></div></div>
+<div class="card"><h2>3. Tốc độ bơm → liều</h2>
+<label>Tốc độ (mL/giờ), đơn vị liều theo mục 2</label><input id="ir2" type="number" inputmode="decimal" value="10">
+<div class="out" id="ir2o"></div></div>
+<div class="card"><h2>4. Bolus → thể tích (mL)</h2>
+<div class="row"><div><label>Liều bolus</label><input id="ib" type="number" inputmode="decimal" value="1"></div>
+<div><label>Đơn vị</label><select id="ibu"></select></div></div>
+<div class="out" id="ibo"></div>
+<div class="src">Dùng chung nồng độ ở mục 1.</div></div>
+</section>
+
+<section id='la'>
+<div class='warn'>Liều tối đa khác nhau giữa các nguồn, nên dùng giới hạn thận trọng. Giảm liều ở người già, suy gan/thận/tim, thai kỳ, hạ albumin hoặc tiêm vào vùng nhiều mạch máu. Tính tổng cộng dồn mọi lần tiêm cùng thuốc; luôn sẵn sàng lipid 20% và dụng cụ hồi sức.</div>
+<div class='card'><h2>Liều tối đa và thể tích</h2>
+<label>Thuốc</label><select id='lg'></select>
+<div class='row'><div><label>Adrenaline</label><select id='le'><option value='0'>Không</option><option value='1'>Có</option></select></div><div><label>Nồng độ (%)</label><input id='lc' type='number' inputmode='decimal' step='0.05' value='0.5'></div></div>
+<label>Cân nặng dùng để tính</label><select id='lm'><option value='0'>Thực tế</option><option value='1'>Lý tưởng (IBW), nên dùng khi béo phì</option></select>
+<div class='out' id='lo'></div><div class='src'>1% = 10 mg/mL · 0,5% = 5 mg/mL · 0,25% = 2,5 mg/mL. Khoảng mg/kg phản ánh sự khác biệt giữa các nguồn, kết quả đã bị cắt theo trần mg tuyệt đối.</div></div>
+<div class='card'><h2>Tê tủy sống (người lớn, tham khảo)</h2><ul>
+<li>Bupivacaine nặng 0,5%: 7,5–15 mg (1,5–3 mL) cho mổ chi dưới/bụng dưới; người già 5–10 mg</li>
+<li>Mổ lấy thai: bupivacaine nặng 8–12 mg, thường kèm fentanyl 10–25 mcg ± morphine 0,1 mg</li>
+<li>Bupivacaine đẳng tỷ trọng 0,5%: 10–15 mg</li>
+<li>Chloroprocaine 1%: 40–60 mg; prilocaine 2%: 40–60 mg (mổ ngắn, ngoại trú)</li>
+<li>Lidocaine ít dùng do nguy cơ triệu chứng thần kinh thoáng qua (TNS)</li></ul>
+<div class='src'>Giảm liều ở người già, thai kỳ, béo phì, tăng áp lực ổ bụng. Điều chỉnh theo chiều cao và loại phẫu thuật.</div></div>
+<div class='card'><h2>Tê ngoài màng cứng (tham khảo)</h2><ul>
+<li>Liều thử: lidocaine 1,5% + adrenaline 1:200.000, 3 mL (15 mcg adrenaline); chỉ phát hiện một phần, tiêm chia liều</li>
+<li>Bolus mổ: chia nhỏ 3–5 mL mỗi 3–5 phút, khoảng 1–2 mL cho mỗi đốt tủy cần phong bế (giảm ở người già, thai kỳ)</li>
+<li>Giảm đau chuyển dạ: bupivacaine 0,0625–0,125% hoặc ropivacaine 0,1–0,2% + fentanyl 2 mcg/mL, duy trì khoảng 8–12 mL/giờ</li>
+<li>Giảm đau sau mổ: ropivacaine 0,2% hoặc bupivacaine 0,1% ± fentanyl 2 mcg/mL, khoảng 4–8 mL/giờ</li></ul></div>
+<div class='card'><h2>Phong bế thần kinh ngoại vi (thể tích tham khảo)</h2><ul>
+<li>Liên cơ bậc thang, trên đòn, nách: khoảng 10–20 mL ropivacaine 0,375–0,5%</li>
+<li>Ống cơ khép, thần kinh đùi, ngồi/khoeo: khoảng 10–20 mL ropivacaine 0,2–0,5%</li>
+<li>TAP, mặt phẳng cơ dựng sống: khoảng 15–30 mL mỗi bên, nồng độ thấp (0,2–0,25%)</li></ul>
+<div class='src'>Dùng thể tích nhỏ nhất có hiệu quả dưới siêu âm. Phong bế hai bên hoặc nhiều vị trí: cộng dồn theo mg/kg ở trên.</div></div>
+</section>
+
+<section id='icu'>
+<div class='card'><h2>SOFA</h2><div id='sf'></div><div class='out' id='sfo'></div>
+<div class='src'>Mỗi hệ cơ quan 0–4 điểm, lấy giá trị xấu nhất trong 24 giờ. Liều vận mạch tính bằng mcg/kg/phút. Tỷ lệ tử vong chỉ mang tính tham khảo.</div></div>
+<div class='card'><h2>qSOFA</h2><div id='qs'></div><div class='out' id='qso'></div></div>
+<div class='card'><h2>An thần: RASS</h2><ul>
+<li><b>+4</b> chống đối · <b>+3</b> rất kích động · <b>+2</b> kích động · <b>+1</b> bồn chồn</li>
+<li><b>0</b> tỉnh táo, bình tĩnh</li>
+<li><b>−1</b> ngủ gà (mở mắt &gt;10 giây khi gọi)</li>
+<li><b>−2</b> an thần nhẹ (mở mắt &lt;10 giây khi gọi)</li>
+<li><b>−3</b> an thần vừa (cử động hoặc mở mắt khi gọi, không nhìn theo)</li>
+<li><b>−4</b> an thần sâu (không đáp ứng giọng, đáp ứng kích thích thể chất)</li>
+<li><b>−5</b> không đánh thức được</li></ul>
+<div class='src'>Mục tiêu thường gặp ở ICU: RASS 0 đến −2 (an thần nhẹ), trừ khi có chỉ định an thần sâu.</div></div>
+<div class='card'><h2>An thần: Ramsay</h2><ul>
+<li><b>1</b> lo âu, kích động · <b>2</b> hợp tác, tỉnh táo · <b>3</b> chỉ đáp ứng lệnh</li>
+<li><b>4</b> ngủ, đáp ứng nhanh với gõ trán hoặc âm thanh lớn</li>
+<li><b>5</b> đáp ứng chậm · <b>6</b> không đáp ứng</li></ul></div>
+<div class='card'><h2>Glasgow (GCS)</h2><div id='gc'></div><div class='out' id='gco'></div></div>
+<div class='card'><h2>Mê sảng (CAM-ICU)</h2><div id='cam'></div><div class='out' id='camo'></div>
+<div class='src'>Dương tính khi có đặc điểm 1 và 2, cùng với 3 hoặc 4.</div></div>
+<div class='card'><h2>Truyền an thần, giảm đau ICU (liều tham khảo)</h2><div id='idl'></div>
+<div class='src'>PADIS 2018 (SCCM): giảm đau trước, an thần nhẹ, ưu tiên propofol hoặc dexmedetomidine hơn benzodiazepine, đánh giá và gián đoạn an thần hằng ngày. Chuẩn độ theo RASS, giảm liều ở người già và huyết động yếu.</div></div>
+</section>
+
+<section id="risk">
+<div class="card"><h2>Phân loại ASA-PS</h2><ul>
+<li><b>I</b> khỏe mạnh</li>
+<li><b>II</b> bệnh hệ thống nhẹ: hút thuốc, thai kỳ, BMI 30–40, THA/ĐTĐ kiểm soát tốt</li>
+<li><b>III</b> bệnh hệ thống nặng: THA/ĐTĐ kiểm soát kém, COPD, BMI ≥40, máy tạo nhịp, lọc thận đều, tiền sử NMCT/đột quỵ/stent &gt;3 tháng</li>
+<li><b>IV</b> bệnh đe dọa tính mạng thường xuyên: NMCT/đột quỵ/stent &lt;3 tháng, thiếu máu cơ tim đang diễn ra, EF giảm nặng, sepsis</li>
+<li><b>V</b> hấp hối, không mổ khó sống · <b>VI</b> chết não hiến tạng · <b>E</b> cấp cứu</li></ul></div>
+<div class="card"><h2>RCRI (nguy cơ tim mạch)</h2><div id="rc"></div><div class="out" id="rco"></div>
+<div class="src">Tỷ lệ theo hiệu chỉnh của Duceppe 2017. Gắng sức &lt;4 METs hoặc điểm cao: xem xét đánh giá thêm theo hướng dẫn ACC/AHA, ESC.</div></div>
+<div class="card"><h2>STOP-Bang (ngưng thở khi ngủ)</h2><div id="sb"></div><div class="out" id="sbo"></div>
+<div class="src">0–2 thấp · 3–4 trung bình · 5–8 cao. Điểm cao: thận trọng với opioid/an thần, lập kế hoạch hậu phẫu theo dõi.</div></div>
+<div class="card"><h2>Nguy cơ thuyên tắc huyết khối (Caprini)</h2>
+<div id="cp" style="max-height:260px;overflow:auto"></div><div class="out" id="cpo"></div>
+<div class="src">Caprini (điểm ghi trong ngoặc). 0 rất thấp · 1–2 thấp · 3–4 trung bình · ≥5 cao. Dự phòng cần cân đối với nguy cơ chảy máu (ACCP, ASH).</div></div>
+<div class="card"><h2>Sàng lọc tiền sử chảy máu</h2><div id="bh"></div><div class="out" id="bho"></div></div>
+<div class="card"><h2>HAS-BLED (nguy cơ chảy máu khi dùng chống đông)</h2><div id="hb"></div><div class="out" id="hbo"></div>
+<div class="src">Xây dựng cho bệnh nhân rung nhĩ dùng chống đông; dùng để phát hiện yếu tố nguy cơ có thể sửa, không dùng để từ chối chống đông.</div></div>
+<div class="card"><h2>Thuốc chống đông / kháng tiểu cầu và gây tê trục thần kinh</h2>
+<label>Thuốc</label><select id="nx"></select><div class="out" id="nxo"></div>
+<div class="warn" style="margin-top:8px">Khoảng cách tối thiểu cho bệnh nhân chức năng thận bình thường. Suy thận, tiêm đau/chảy máu khi chọc, dùng nhiều thuốc cùng lúc: kéo dài thêm hoặc tránh block. ASRA (4th ed.) và ESAIC/ESRA 2022 có khác biệt nhỏ, hãy đối chiếu bản mới nhất và phác đồ khoa.</div>
+<div class="src">Kiểm tra thêm tiểu cầu, PT/INR, aPTT, chức năng thận. Theo dõi thần kinh sau block.</div></div>
+<div class='card'><h2>Khả năng gắng sức: DASI → METs</h2><div id='ds' style='max-height:260px;overflow:auto'></div><div class='out' id='dso'></div>
+<div class='src'>VO₂ = 0,43 × DASI + 9,6 mL/kg/phút; METs = VO₂/3,5. Tham khảo: 1 MET nghỉ/tự chăm sóc · ~4 METs leo 1–2 tầng cầu thang hoặc đi bộ nhanh · &gt;10 METs bơi, tennis đơn. Dưới 4 METs là gắng sức kém.</div></div>
+<div class='card'><h2>Nguy cơ biến chứng hô hấp sau mổ (ARISCAT)</h2><div id='ar'></div><div class='out' id='aro'></div>
+<ul><li>Ngừng thuốc lá ≥4 tuần, tối ưu COPD/hen, điều trị nhiễm trùng hô hấp; hoãn mổ chương trình nếu nhiễm trùng cấp</li>
+<li>Trong mổ: thông khí bảo vệ phổi (Vt 6–8 mL/kg PBW, PEEP), tránh quá tải dịch, đảo ngược giãn cơ đầy đủ, cân nhắc gây tê vùng</li>
+<li>Sau mổ: nâng đầu, tập thở, giảm đau đa mô thức, CPAP/BiPAP cho nguy cơ cao</li></ul>
+<div class='src'>ARISCAT: &lt;26 thấp (~1,6%) · 26–44 trung bình (~13,3%) · ≥45 cao (~42,1%).</div></div>
+<div class='card'><h2>Nguy cơ trào ngược, hít sặc</h2><div id='asp'></div><div class='out' id='aspo'></div></div>
+<div class='card'><h2>Gan: Child-Pugh</h2><div id='cpg'></div><div class='out' id='cpgo'></div></div>
+<div class='card'><h2>Gan: MELD / MELD-Na</h2>
+<div class='row'><div><label>Bilirubin (mg/dL)</label><input id='mb' type='number' inputmode='decimal' value='1'></div><div><label>INR</label><input id='mi' type='number' inputmode='decimal' value='1'></div></div>
+<div class='row'><div><label>Creatinine (mg/dL)</label><input id='mc' type='number' inputmode='decimal' value='1'></div><div><label>Natri (mmol/L)</label><input id='mn' type='number' inputmode='decimal' value='137'></div></div>
+<div class='out' id='mo'></div><div class='src'>Công thức UNOS 2016 (MELD-Na), chưa phải MELD 3.0 (2023, có thêm giới và albumin). MELD dự đoán tử vong 3 tháng ở bệnh gan mạn; khi đánh giá nguy cơ phẫu thuật, dùng cùng Child-Pugh và loại phẫu thuật.</div></div>
+<div class='card'><h2>Men gan tăng trước mổ: cách tiếp cận</h2><ul>
+<li>Tăng nhẹ (AST/ALT &lt;2–3× ULN), không triệu chứng, chức năng tổng hợp bình thường: thường có thể mổ, tìm nguyên nhân sau</li>
+<li>AST/ALT &gt;5× ULN, viêm gan cấp (virus, rượu, thuốc), suy gan cấp: hoãn mổ chương trình</li>
+<li>Xơ gan: đánh giá Child-Pugh, MELD, tăng áp cửa, cổ trướng, bệnh não gan; Child C: tránh mổ chương trình</li>
+<li>Xét nghiệm: AST, ALT, bilirubin, albumin, INR, tiểu cầu, HBV/HCV, xem xét nguyên nhân do thuốc</li>
+<li>Gây mê: duy trì huyết áp và dòng máu gan, ưu tiên sevoflurane/isoflurane/desflurane, cisatracurium, tránh NSAID, paracetamol ≤2 g/ngày trong xơ gan, thận trọng opioid và benzodiazepine</li></ul>
+<div class='src'>Đối chiếu hướng dẫn bệnh gan trước mổ (AASLD, ACG) và tư vấn tiêu hóa-gan mật.</div></div>
+<div class="card"><h2>Đánh giá đường thở</h2><ul>
+<li>Mallampati III–IV, khoảng cách giáp-cằm &lt;6 cm, há miệng &lt;3 cm, hạn chế duỗi cổ/há hàm, hàm lùi</li>
+<li>LEMON: nhìn, đánh giá 3-3-2, Mallampati, tắc nghẽn, cổ</li>
+<li>Tiền sử đặt NKQ khó, xạ trị vùng cổ, béo phì, ngưng thở khi ngủ, bụng đầy/trào ngược</li>
+<li>Chuẩn bị kế hoạch A–D, video laryngoscope, ngủ nhẹ/nội soi mềm khi nghi khó</li></ul>
+<div class="src">ASA Difficult Airway 2022, DAS 2015.</div></div>
+</section>
+
+<section id="fast">
+<div class="card"><h2>Nhịn ăn trước gây mê (người khỏe mạnh, mổ chương trình)</h2>
+<ul><li>Dịch trong: ≥ 2 giờ</li><li>Sữa mẹ: ≥ 4 giờ</li><li>Sữa công thức, sữa không phải sữa mẹ, bữa nhẹ: ≥ 6 giờ</li><li>Bữa nhiều dầu mỡ, thịt: ≥ 8 giờ</li></ul>
+<div class="src">ASA Practice Guidelines 2023. Cân nhắc nguy cơ trào ngược (đái tháo đường, liệt dạ dày, béo phì, thai kỳ, cấp cứu).</div></div>
+<div class="card"><h2>Apfel – nguy cơ PONV</h2><div id="apf"></div><div class="out" id="apo"></div></div>
+</section>
+
+<section id="ref">
+<div class="card"><h2>Nguồn tham khảo</h2>
+<ul><li>ASA: Practice Guidelines (nhịn ăn 2023, đường thở khó 2022, theo dõi cơ bản)</li>
+<li>ASRA: Checklist LAST 2020</li>
+<li>MHAUS / EMHG: xử trí MH</li>
+<li>AHA (ACLS) và ERC: hồi sức tim phổi</li>
+<li>WFSA, DAS (UK), ANZCA, ESAIC: hướng dẫn thực hành</li></ul>
+<div class="src">Ứng dụng chỉ tóm tắt mức tham khảo. Hãy kiểm tra phiên bản mới nhất của từng hướng dẫn và phác đồ của khoa trước khi áp dụng.</div></div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id),f=(n,d=0)=>isFinite(n)?(+n).toFixed(d):"–";
+const tabs=[["calc","Tính toán"],["drug","Thuốc"],["inf","Pha truyền"],["la","Gây tê"],["emg","Cấp cứu"],["risk","Nguy cơ"],["icu","ICU/An thần"],["fast","Nhịn ăn/PONV"],["ref","Nguồn"]];
+tabs.forEach(([id,t],i)=>{const b=document.createElement("button");b.textContent=t;if(!i)b.className="on";
+b.onclick=()=>{document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==id));[...$("nav").children].forEach(x=>x.classList.toggle("on",x==b));if(id=="emg")calc()};$("nav").appendChild(b)});
+function ibwOf(){const w=+$("w").value,h=+$("h").value,m=$("sx").value=="m",age=+$("age").value,ped=age<12||h<140;return{ibw:ped?w:(m?50:45.5)+0.91*(h-152.4),ped}}
+function dosew(){const w=+$("w").value,i=ibwOf(),v=$("wb").value;return v=="1"?Math.min(w,i.ibw):v=="2"?(w>i.ibw?i.ibw+0.4*(w-i.ibw):w):w}
+const apt=["Nữ","Không hút thuốc","Tiền sử PONV/say tàu xe","Dùng opioid sau mổ"];
+$("apf").innerHTML=apt.map((a,i)=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px"><input type="checkbox" style="width:auto" class="ap">${a}</label>`).join("");
+function ap(){const n=[...document.querySelectorAll(".ap")].filter(x=>x.checked).length;
+$("apo").innerHTML=`Điểm <b>${n}/4</b> · nguy cơ PONV ~ <b>${[10,20,40,60,80][n]}%</b>`}
+document.querySelectorAll(".ap").forEach(x=>x.onchange=ap);ap();
+function calc(){
+const w=+$("w").value,h=+$("h").value,m=$("sx").value=="m",age=+$("age").value;
+const P_=ibwOf(),ibw=P_.ibw,bmi=w/((h/100)**2);
+$("o1").innerHTML=`BMI <b>${f(bmi,1)}</b> kg/m² · Cân nặng lý tưởng (IBW/PBW) <b>${f(ibw,1)}</b> kg`+(P_.ped?'<br><span style="color:var(--wn)">Trẻ em (&lt;12 tuổi) hoặc cao &lt;140 cm: công thức PBW người lớn không áp dụng, đang dùng cân nặng thực để tính Vt, lipid LAST.</span>':'');
+$("o2").innerHTML=`Vt 6 mL/kg: <b>${f(6*ibw)}</b> mL · 8 mL/kg: <b>${f(8*ibw)}</b> mL`;
+const mt=w<=10?4*w:w<=20?40+2*(w-10):60+(w-20);
+$("o3").innerHTML=`<b>${f(mt)}</b> mL/giờ (4-2-1) · ${f(mt*24)} mL/24 giờ`;
+const ebv=+$("grp").value*w,hi=+$("hi").value,hf=+$("hf").value;
+$("o4").innerHTML=`EBV ≈ ${f(ebv)} mL · MABL ≈ <b>${f(ebv*(hi-hf)/hi)}</b> mL`+(bmi>=30?'<br><span style="color:var(--wn)">BMI ≥30: EBV tính theo cân thực thường bị ước quá cao.</span>':'');
+$("o5").innerHTML=age>=1&&age<=10?`Cỡ có bóng <b>${f(age/4+3.5,1)}</b> · không bóng <b>${f(age/4+4,1)}</b> · độ sâu miệng ≈ <b>${f(age/2+12,1)}</b> cm`:"Nhập tuổi 1–10 năm";
+const lb=w>70&&ibw>70?"100 mL (bệnh nhân &gt;70 kg)":f(1.5*ibw)+" mL (1,5 mL/kg IBW)";
+const inf=w>70&&ibw>70?"200–250 mL trong 15–20 phút":f(0.25*ibw*60)+" mL/giờ ("+f(0.25*ibw,1)+" mL/phút)";
+$("last").innerHTML=`Intralipid 20%: bolus <b>${lb}</b> trong 2–3 phút<br>Truyền: <b>${inf}</b><br>Bolus lặp lại tối đa 2 lần, tăng gấp đôi tốc độ truyền nếu còn bất ổn<br>Giới hạn tổng ≈ <b>${f(12*ibw)}</b> mL (12 mL/kg)`;
+$("mh").innerHTML=`Dantrolene khởi đầu 2,5 mg/kg = <b>${f(2.5*w)}</b> mg · lọ 20 mg (pha 60 mL nước cất/lọ): ≈ ${Math.ceil(2.5*w/20)} lọ · Ryanodex 250 mg (pha 5 mL): ≈ ${Math.ceil(2.5*w/250)} lọ<br>Tối đa thường 10 mg/kg = ${f(10*w)} mg, có thể hơn nếu còn triệu chứng<br>Tăng kali: CaCl₂ 10 mg/kg = <b>${f(10*w)}</b> mg (hoặc calci gluconate 30 mg/kg = ${f(30*w)} mg) · bicarbonate 1–2 mEq/kg = ${f(w)}–${f(2*w)} mEq · insulin thường 0,1 IU/kg = ${f(0.1*w,1)} IU + glucose 0,5 g/kg = ${f(0.5*w,1)} g`;
+}
+const D=[
+["Thuốc mê tĩnh mạch",[
+["Propofol","1,5–2,5 mg/kg (già/sốc: 0,5–1)",1.5,2.5,"mg"],
+["Etomidate","0,2–0,3 mg/kg",.2,.3,"mg"],
+["Ketamine","1–2 mg/kg; giảm đau/an thần 0,2–0,5 mg/kg",1,2,"mg"],
+["Midazolam (an thần)","0,02–0,05 mg/kg",.02,.05,"mg"],
+["Midazolam (khởi mê)","0,1–0,2 mg/kg",.1,.2,"mg"]]],
+["Opioid và dexmedetomidine",[
+["Fentanyl","1–3 mcg/kg",1,3,"mcg"],
+["Sufentanil","0,1–0,5 mcg/kg",.1,.5,"mcg"],
+["Remifentanil","bolus 0,5–1 mcg/kg (có thể bỏ); truyền 0,05–0,3 mcg/kg/phút",.5,1,"mcg (bolus)"],
+["Morphine","0,05–0,1 mg/kg, chuẩn độ 1–2 mg/lần",.05,.1,"mg"],
+["Dexmedetomidine","nạp 1 mcg/kg/10 phút (giảm hoặc bỏ nếu già, huyết động yếu); duy trì 0,2–0,7 mcg/kg/giờ",1,1,"mcg (liều nạp)"]]],
+["Giãn cơ và đảo ngược",[
+["Succinylcholine","1–1,5 mg/kg",1,1.5,"mg"],
+["Rocuronium","đặt NKQ 0,6 mg/kg; RSI 1,0–1,2 mg/kg; duy trì 0,1–0,2 mg/kg",.6,1.2,"mg"],
+["Cisatracurium","0,15–0,2 mg/kg; duy trì 0,03 mg/kg",.15,.2,"mg"],
+["Vecuronium","0,1 mg/kg",.1,.1,"mg"],
+["Sugammadex 2 mg/kg","Phong bế nông, đã hồi phục tới T2. Tránh khi CrCl &lt;30; làm giảm hiệu quả thuốc tránh thai nội tiết",2,2,"mg"],
+["Sugammadex 4 mg/kg","Phong bế sâu, PTC 1–2",4,4,"mg"],
+["Sugammadex 16 mg/kg","Đảo ngược tức thì, 3 phút sau rocuronium 1,2 mg/kg",16,16,"mg"],
+["Neostigmine","0,04–0,07 mg/kg (tối đa 5 mg) kèm atropine 0,01–0,02 mg/kg hoặc glycopyrrolate",.04,.07,"mg"]]],
+["Vận mạch và tăng co bóp (tốc độ tính ra mcg/phút)",[
+["Noradrenaline","bolus 4–10 mcg (gây mê); truyền 0,05–0,5 mcg/kg/phút",.05,.5,"mcg/phút"],
+["Adrenaline","bolus 10–100 mcg; truyền 0,01–0,5 mcg/kg/phút",.01,.5,"mcg/phút"],
+["Phenylephrine","bolus 50–100 mcg; truyền 0,1–1 mcg/kg/phút",.1,1,"mcg/phút"],
+["Dopamine","5–20 mcg/kg/phút",5,20,"mcg/phút"],
+["Dobutamine","2–20 mcg/kg/phút",2,20,"mcg/phút"],
+["Ephedrine","5–10 mg bolus, lặp lại theo đáp ứng"],
+["Vasopressin","1–2 IU bolus (gây mê); sốc 0,01–0,04 IU/phút"]]],
+["Tim mạch, loạn nhịp, hồi sức",[
+["Atropine","nhịp chậm 0,5–1 mg TM, lặp 3–5 phút (tối đa 3 mg); nhi 0,02 mg/kg"],
+["Amiodarone","ngừng tuần hoàn 300 mg rồi 150 mg; loạn nhịp có mạch 150 mg/10 phút rồi 1 mg/phút × 6 giờ"],
+["Adenosine","6 mg bolus nhanh, sau đó 12 mg"],
+["Esmolol","bolus 0,5 mg/kg; truyền 50–300 mcg/kg/phút",.5,.5,"mg (bolus)"],
+["Labetalol","5–20 mg TM chuẩn độ"],
+["Nitroglycerin","5–200 mcg/phút chuẩn độ"],
+["Calci clorua 10%","500–1000 mg (5–10 mL) TM chậm; qua đường TM trung tâm nếu có thể"],
+["Natri bicarbonate 8,4%","1 mEq/kg khi toan nặng/tăng kali, có chỉ định rõ",1,1,"mEq"],
+["Magnesium sulfate","1–2 g TM chậm (xoắn đỉnh 2 g)"],
+["Naloxone","0,04–0,4 mg chuẩn độ"],
+["Flumazenil","0,2 mg, lặp lại đến tối đa 1 mg"],
+["Ondansetron / Dexamethasone","4 mg / 4–8 mg TM (dự phòng PONV)"]]]
+];
+function drugs(){const W0=+$("w").value,Wd=dosew();$("dw").textContent=f(Wd,1)+" kg ("+$("wb").selectedOptions[0].text+")";
+$("dl").innerHTML=D.map(([g,it],i)=>`<details ${i==0?"open":""}><summary>${g}</summary>`+it.map(([n,t,a,b,u])=>{let c="";const w=/^(Vận mạch|Tim mạch)/.test(g)?W0:Wd;
+if(a!=null&&w>0){const F=x=>f(x,x<10?1:0);c=`<div class="out">≈ <b>${a==b?F(a*w):F(a*w)+"–"+F(b*w)}</b> ${u}</div>`}
+return `<div class="card"><b>${n}</b><div style="font-size:13px">${t}</div>${c}</div>`}).join("")+"</details>").join("")}
+function chk(id,items,out,fn){$(id).innerHTML=items.map(a=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px"><input type="checkbox" style="width:auto">${a}</label>`).join("");
+const u=()=>{const n=[...$(id).querySelectorAll("input")].filter(x=>x.checked).length;$(out).innerHTML=fn(n)};$(id).onchange=u;u()}
+chk("rc",["Phẫu thuật nguy cơ cao (trong ổ bụng, lồng ngực, mạch máu trên bẹn)","Bệnh mạch vành","Suy tim","Bệnh mạch máu não","Đái tháo đường dùng insulin","Creatinine &gt;2 mg/dL (≈177 µmol/L)"],"rco",n=>`Điểm <b>${n}/6</b> · nguy cơ biến cố tim mạch lớn ≈ <b>${["3,9","6,0","10,1","15,0","15,0","15,0","15,0"][n]}%</b>`);
+chk("sb",["Ngáy to","Mệt mỏi, buồn ngủ ban ngày","Có người thấy ngưng thở khi ngủ","Tăng huyết áp","BMI &gt;35","Tuổi &gt;50","Vòng cổ &gt;40 cm","Nam giới"],"sbo",n=>`Điểm <b>${n}/8</b> · <b>${n<=2?"nguy cơ thấp":n<=4?"nguy cơ trung bình":"nguy cơ cao"}</b> mắc OSA`);
+const IU=[["mcg/kg/phút","1|1|60|0"],["mcg/kg/giờ","1|1|1|0"],["mg/kg/giờ","1000|1|1|0"],["mg/kg/phút","1000|1|60|0"],["ng/kg/phút","0.001|1|60|0"],["mcg/phút","1|0|60|0"],["mcg/giờ","1|0|1|0"],["mg/giờ","1000|0|1|0"],["mg/phút","1000|0|60|0"],["IU/phút","1|0|60|1"],["IU/giờ","1|0|1|1"]];
+const BU=[["mg/kg","1000|1|1|0"],["mcg/kg","1|1|1|0"],["mg","1000|0|1|0"],["mcg","1|0|1|0"],["IU","1|0|1|1"],["IU/kg","1|1|1|1"]];
+const P=[["— tự nhập —"],["Noradrenaline 4 mg/50 mL",4,"1000",50,0],["Adrenaline 4 mg/50 mL",4,"1000",50,0],["Dobutamine 250 mg/50 mL",250,"1000",50,0],["Dopamine 200 mg/50 mL",200,"1000",50,0],["Dexmedetomidine 200 mcg/50 mL",200,"1",50,1],["Propofol 500 mg/50 mL",500,"1000",50,2],["Remifentanil 1 mg/20 mL",1000,"1",20,0],["Fentanyl 500 mcg/50 mL",500,"1",50,1],["Midazolam 50 mg/50 mL",50,"1000",50,2],["Nitroglycerin 10 mg/50 mL",10,"1000",50,5],["Vasopressin 20 IU/50 mL",20,"iu",50,9],["Esmolol 2500 mg/250 mL",2500,"1000",250,0]];
+function opt(s,a){s.innerHTML=a.map(([n,v],i)=>`<option value="${v!==undefined?v:i}">${n}</option>`).join("")}
+opt($("idu"),IU);opt($("ibu"),BU);
+$("ip").innerHTML=P.map((p,i)=>`<option value="${i}">${p[0]}</option>`).join("");
+$("ip").onchange=()=>{const p=P[+$("ip").value];if(p.length>1){$("ia").value=p[1];$("iau").value=p[2];$("iv").value=p[3];$("idu").selectedIndex=p[4]}inf()};
+const pr=v=>{const[m,k,t,i]=v.split("|").map(Number);return{m,k,t,i}};
+const fm=x=>!isFinite(x)?"–":x>=100?f(x,0):x>=10?f(x,1):f(x,2);
+const dur=h=>{if(!isFinite(h)||h<=0)return"–";const m=Math.round(h*60);return m>=60?Math.floor(m/60)+" giờ "+(m%60)+" phút":m+" phút"};
+function inf(){const w=+$("w").value;$("iw").textContent=f(w,1);
+const au=$("iau").value,ia=au=="iu",A=+$("ia").value*(ia?1:+au),V=+$("iv").value,C=A/V,U=ia?"IU":"mcg";
+const bad=C>0&&isFinite(C);
+$("ic").innerHTML=bad?`Nồng độ <b>${fm(C)}</b> ${U}/mL`+(!ia&&C>=1000?` (${fm(C/1000)} mg/mL)`:""):"Nhập lượng thuốc và thể tích";
+const ck=(u)=>!bad?"Chưa có nồng độ":(u.i!=(ia?1:0))?"Đơn vị thuốc (IU hoặc khối lượng) không khớp với đơn vị liều":(u.k&&!(w>0))?"Cần nhập cân nặng":"";
+const u=pr($("idu").value),e=ck(u),k=u.m*(u.k?w:1)*u.t;
+const rate=(+$("id").value)*k/C;
+$("ir").innerHTML=e?e:`Tốc độ <b>${fm(rate)}</b> mL/giờ<br>Hết sau ${dur(V/rate)} (thể tích ${f(V,0)} mL)`;
+$("ir2o").innerHTML=e?e:`Liều <b>${fm((+$("ir2").value)*C/k)}</b> ${$("idu").selectedOptions[0].text}`;
+const b=pr($("ibu").value),eb=ck(b);
+$("ibo").innerHTML=eb?eb:`Rút <b>${fm((+$("ib").value)*b.m*(b.k?w:1)/C)}</b> mL`;}
+["ia","iau","iv","id","idu","ir2","ib","ibu"].forEach(i=>$(i).oninput=inf);
+function chkw(id,items,out,fn){$(id).innerHTML=items.map(([a,p])=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px"><input type="checkbox" data-p="${p}" style="width:auto">${a} (${p})</label>`).join("");
+const u=()=>{const n=[...$(id).querySelectorAll("input")].filter(x=>x.checked).reduce((s,x)=>s+ +x.dataset.p,0);$(out).innerHTML=fn(n)};$(id).onchange=u;u()}
+const CP=[["Tuổi 41–60",1],["Phẫu thuật nhỏ",1],["BMI >25",1],["Phù chân",1],["Giãn tĩnh mạch",1],["Có thai/sau sinh &lt;1 tháng",1],["Sảy thai tự nhiên không rõ nguyên nhân/thai chết lưu",1],["Thuốc tránh thai/liệu pháp hormone",1],["Nhiễm trùng huyết (&lt;1 tháng)",1],["Bệnh phổi nặng/viêm phổi (&lt;1 tháng)",1],["Chức năng hô hấp bất thường",1],["NMCT cấp",1],["Suy tim (&lt;1 tháng)",1],["Bệnh viêm ruột",1],["Nằm giường (bệnh nội khoa)",1],["Đại phẫu trong vòng 1 tháng",1],
+["Tuổi 61–74",2],["Nội soi khớp",2],["Mổ hở lớn (&gt;45 phút)",2],["Mổ nội soi (&gt;45 phút)",2],["Ung thư (hiện tại/trước đó)",2],["Nằm bất động &gt;72 giờ",2],["Bó bột cố định",2],["Đường truyền tĩnh mạch trung tâm",2],
+["Tuổi ≥75",3],["Tiền sử VTE",3],["Gia đình có VTE",3],["Yếu tố V Leiden",3],["Đột biến prothrombin 20210A",3],["Lupus anticoagulant",3],["Kháng thể kháng cardiolipin",3],["Tăng homocystein",3],["Giảm tiểu cầu do heparin (HIT)",3],["Rối loạn tăng đông khác",3],
+["Đột quỵ (&lt;1 tháng)",5],["Thay khớp háng/gối chọn lọc",5],["Gãy xương hông/chậu/chân",5],["Chấn thương tủy sống cấp (&lt;1 tháng)",5],["Đa chấn thương (&lt;1 tháng)",5]];
+chkw("cp",CP,"cpo",n=>{const l=n==0?"rất thấp":n<=2?"thấp":n<=4?"trung bình":"cao";const s=n==0?"đi lại sớm":n<=2?"đi lại sớm, cân nhắc dự phòng cơ học":n<=4?"dự phòng cơ học ± thuốc nếu nguy cơ chảy máu thấp":"thuốc + cơ học nếu không có chống chỉ định; nếu nguy cơ chảy máu cao: cơ học";return `Điểm <b>${n}</b> · nguy cơ <b>${l}</b><br><span style="font-size:13px">Gợi ý: ${s}</span>`});
+chk("bh",["Chảy máu cam &gt;10 phút hoặc tái diễn","Chảy máu kéo dài sau nhổ răng/phẫu thuật/sinh","Bầm tím tự nhiên hoặc chảy máu dưới da dễ dàng","Kinh nguyệt nhiều bất thường","Gia đình có rối loạn đông máu","Đang dùng chống đông, kháng tiểu cầu, NSAID, thảo dược (ginkgo, tỏi, nhân sâm)","Bệnh gan, thận, bệnh máu/ung thư đang điều trị"],"bho",n=>n==0?"Không có yếu tố nghi ngờ qua sàng lọc":`<b>${n}</b> yếu tố dương tính: xét PT, aPTT, tiểu cầu, fibrinogen; hội chẩn huyết học nếu nghi rối loạn đông máu`);
+chk("hb",["Tăng huyết áp chưa kiểm soát (tâm thu &gt;160)","Thận bất thường (lọc thận, ghép, Cr &gt;2,26 mg/dL)","Gan bất thường (xơ gan, bilirubin &gt;2×, AST/ALT &gt;3×)","Đột quỵ","Tiền sử chảy máu hoặc cơ địa chảy máu","INR không ổn định","Tuổi &gt;65","Thuốc kháng kết tập/NSAID","Rượu nhiều"],"hbo",n=>`Điểm <b>${n}/9</b> · <b>${n>=3?"nguy cơ chảy máu cao":"nguy cơ thấp–trung bình"}</b>`);
+const NX=[["Heparin SC dự phòng (UFH)","Chờ ≥4–6 giờ sau liều (hoặc aPTT bình thường)","Dùng lại ≥1 giờ sau block/rút catheter"],
+["Heparin TM (UFH)","Chờ 4–6 giờ và aPTT bình thường","Dùng lại ≥1 giờ sau block/rút catheter; rút catheter khi đông máu bình thường"],
+["Enoxaparin dự phòng (1 lần/ngày)","Chờ ≥12 giờ sau liều","Liều đầu ≥12 giờ sau đặt kim; rút catheter ≥12 giờ sau liều cuối; liều kế ≥4 giờ sau rút"],
+["LMWH liều điều trị","Chờ ≥24 giờ sau liều","Dùng lại ≥24 giờ sau block/phẫu thuật; không rút catheter trong 12 giờ sau liều"],
+["Warfarin","Ngừng 5 ngày, INR bình thường (≤1,4)","Rút catheter khi INR &lt;1,5; theo dõi INR hằng ngày nếu tiếp tục dùng"],
+["Rivaroxaban, apixaban, edoxaban","Chờ ≥72 giờ (suy thận: kéo dài; cân nhắc anti-Xa)","≥6 giờ sau block/rút catheter; không dùng khi còn catheter"],
+["Dabigatran","Chờ ≈120 giờ (5 ngày) theo ASRA; thải qua thận nên suy thận cần kéo dài, ESAIC chia theo CrCl: đối chiếu bản mới nhất","≥6 giờ sau block/rút catheter; không dùng khi còn catheter"],
+["Fondaparinux","Chờ khoảng 36–42 giờ (liều dự phòng); tránh block nếu liều điều trị","Liều đầu ≥6–12 giờ sau block; tránh catheter lưu (theo phác đồ khoa)"],
+["Aspirin / NSAID đơn độc","Không cần ngừng","Không hạn chế; thận trọng khi phối hợp thuốc khác"],
+["Clopidogrel, ticagrelor","Ngừng 5–7 ngày","Có thể dùng lại sau 24 giờ khi còn catheter; sau rút catheter dùng liều không nạp"],
+["Prasugrel","Ngừng 7–10 ngày","Dùng liều không nạp sau block/rút catheter"],
+["Cangrelor","Ngừng 3 giờ","Theo phác đồ khoa"]];
+$("nx").innerHTML=NX.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join("");
+$("nx").onchange=()=>{const r=NX[+$("nx").value];$("nxo").innerHTML=`Trước block: <b>${r[1]}</b><br>Sau block/catheter: ${r[2]}`};$("nx").onchange();
+const LA=[['Lidocaine',[4.5,4.5],300,[7,7],500],['Bupivacaine',[2,2.5],175,[2.5,3],225],['Levobupivacaine',[2,2],150,[2,2],150],['Ropivacaine',[3,3],200,[3,3],200],['Mepivacaine',[4,5],400,[7,7],500],['Prilocaine',[6,6],400,[8,8],600],['Chloroprocaine',[11,11],800,[14,14],1000]];
+$('lg').innerHTML=LA.map((g,i)=>`<option value='${i}'>${g[0]}</option>`).join('');
+['lg','le','lc','lm'].forEach(i=>$(i).oninput=la);
+function la(){const w=+$('w').value,ibw=ibwOf().ibw,W=$('lm').value=='1'?ibw:w,g=LA[+$('lg').value],e=+$('le').value,r=e?g[3]:g[1],cap=e?g[4]:g[2],c=+$('lc').value*10;
+let lo=r[0]*W,hi=r[1]*W;if(cap){lo=Math.min(lo,cap);hi=Math.min(hi,cap)}
+const rg=lo==hi?f(lo,0):f(lo,0)+'–'+f(hi,0),vr=lo==hi?f(lo/c,1):f(lo/c,1)+'–'+f(hi/c,1);
+$('lo').innerHTML=!(W>0)?'Nhập cân nặng và chiều cao ở tab Tính toán':!(c>0)?'Nhập nồng độ':`Cân nặng tính <b>${f(W,1)}</b> kg<br>Tối đa ≈ <b>${rg} mg</b> (${r[0]==r[1]?r[0]:r[0]+'–'+r[1]} mg/kg${cap?', trần '+cap+' mg':''})<br>Thể tích ở ${$('lc').value}%: <b>${vr} mL</b>`}
+function sel(id,rows,out,fn){$(id).innerHTML=rows.map(([t,o])=>`<label>${t}</label><select>`+o.map(([l,s])=>`<option value='${s}'>${l}</option>`).join('')+`</select>`).join('');const u=()=>{$(out).innerHTML=fn([...$(id).querySelectorAll('select')].map(x=>+x.value))};$(id).onchange=u;u()}
+function chkx(id,items,out,fn){$(id).innerHTML=items.map(a=>`<label style='display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px'><input type='checkbox' style='width:auto'>${a}</label>`).join('');const u=()=>{$(out).innerHTML=fn([...$(id).querySelectorAll('input')].map(x=>x.checked))};$(id).onchange=u;u()}
+sel('sf',[['Hô hấp: PaO₂/FiO₂ (mmHg)',[['≥400',0],['<400',1],['<300',2],['<200 và thở máy',3],['<100 và thở máy',4]]],['Đông máu: tiểu cầu (×10³/µL)',[['≥150',0],['<150',1],['<100',2],['<50',3],['<20',4]]],['Gan: bilirubin (mg/dL)',[['<1,2',0],['1,2–1,9',1],['2,0–5,9',2],['6,0–11,9',3],['≥12',4]]],['Tim mạch',[['MAP ≥70',0],['MAP <70',1],['Dopamine ≤5 hoặc dobutamine',2],['Dopamine >5, adrenaline ≤0,1 hoặc noradrenaline ≤0,1',3],['Dopamine >15, adrenaline >0,1 hoặc noradrenaline >0,1',4]]],['Thần kinh: GCS',[['15',0],['13–14',1],['10–12',2],['6–9',3],['<6',4]]],['Thận: creatinine (mg/dL) hoặc nước tiểu',[['<1,2',0],['1,2–1,9',1],['2,0–3,4',2],['3,5–4,9 hoặc nước tiểu <500 mL/ngày',3],['≥5,0 hoặc nước tiểu <200 mL/ngày',4]]]],'sfo',v=>{const n=v.reduce((a,b)=>a+b,0),mr=n<=6?'<10%':n<=9?'15–20%':n<=12?'40–50%':n<=14?'50–60%':n==15?'>80%':'>90%';return `Tổng SOFA <b>${n}/24</b> · tử vong tham khảo ${mr}<br><span style='font-size:13px'>Tăng ≥2 điểm so với nền gợi ý rối loạn chức năng cơ quan do nhiễm trùng (Sepsis-3).</span>`});
+chk('qs',['Nhịp thở ≥22 lần/phút','Thay đổi ý thức (GCS <15)','Huyết áp tâm thu ≤100 mmHg'],'qso',n=>`Điểm <b>${n}/3</b> · ${n>=2?'<b>nguy cơ cao</b> diễn tiến xấu':'chưa đạt ngưỡng'} (qSOFA chỉ là công cụ sàng lọc)`);
+sel('gc',[['Mắt (E)',[['4 Tự mở',4],['3 Theo lệnh',3],['2 Khi đau',2],['1 Không',1]]],['Lời nói (V)',[['5 Định hướng',5],['4 Lú lẫn',4],['3 Từ rời rạc',3],['2 Âm thanh',2],['1 Không (đặt NKQ: ghi T)',1]]],['Vận động (M)',[['6 Theo lệnh',6],['5 Định khu đau',5],['4 Co rút',4],['3 Gập bất thường',3],['2 Duỗi',2],['1 Không',1]]]],'gco',v=>{const n=v[0]+v[1]+v[2];return `GCS <b>${n}</b> (E${v[0]} V${v[1]} M${v[2]}) · ${n>=13?'nhẹ':n>=9?'trung bình':'nặng (≤8)'}`});
+chkx('cam',['1. Khởi phát cấp tính hoặc diễn tiến dao động','2. Mất tập trung (test chú ý)','3. Mức ý thức thay đổi (RASS khác 0)','4. Tư duy vô tổ chức'],'camo',a=>a[0]&&a[1]&&(a[2]||a[3])?'<b>CAM-ICU dương tính</b> (mê sảng)':'CAM-ICU chưa dương tính');
+const ID=[['Propofol','0,3–3 mg/kg/giờ',.3,3,'mg/giờ'],['Dexmedetomidine','0,2–0,7 mcg/kg/giờ (tối đa thường 1,4)',.2,.7,'mcg/giờ'],['Midazolam','0,02–0,1 mg/kg/giờ',.02,.1,'mg/giờ'],['Fentanyl','0,7–10 mcg/kg/giờ',.7,10,'mcg/giờ'],['Morphine','0,01–0,1 mg/kg/giờ',.01,.1,'mg/giờ'],['Ketamine (liều dưới mê)','0,05–0,4 mg/kg/giờ',.05,.4,'mg/giờ']];
+function icuD(){const w=dosew();$('idl').innerHTML=`<div class='src'>Cân nặng tính liều: <b>${f(w,1)}</b> kg (chọn ở tab Tính toán)</div>`+ID.map(([n,t,a,b,u])=>`<div style='margin:6px 0'><b>${n}</b>: ${t}<div class='out'>≈ <b>${f(a*w,1)}–${f(b*w,1)}</b> ${u}</div></div>`).join('')}
+chkw('ds',[['Tự chăm sóc (ăn, mặc, tắm, vệ sinh)',2.75],['Đi lại trong nhà',1.75],['Đi bộ 1–2 dãy nhà trên đường bằng',2.75],['Leo một tầng cầu thang hoặc lên dốc',5.5],['Chạy một đoạn ngắn',8],['Việc nhà nhẹ (lau bụi, rửa chén)',2.7],['Việc nhà vừa (hút bụi, quét, xách đồ)',3.5],['Việc nhà nặng (chà sàn, dọn đồ nặng)',8],['Làm vườn (cào lá, làm cỏ, cắt cỏ máy)',4.5],['Quan hệ tình dục',5.25],['Giải trí vừa (golf, bowling, khiêu vũ, ném bóng)',6],['Thể thao gắng sức (bơi, tennis đơn, bóng đá, bóng rổ)',7.5]],'dso',n=>{const v=0.43*n+9.6;return `DASI <b>${f(n,1)}/58,2</b> · VO₂ ≈ ${f(v,1)} mL/kg/phút ≈ <b>${f(v/3.5,1)} METs</b><br>${n>34?'Khả năng gắng sức tốt (DASI &gt;34)':'Gắng sức kém (DASI ≤34): cân nhắc đánh giá thêm theo nguy cơ phẫu thuật và RCRI'}`});
+sel('ar',[['Tuổi',[['≤50',0],['51–80',3],['>80',16]]],['SpO₂ trước mổ (khí phòng)',[['≥96%',0],['91–95%',8],['≤90%',24]]],['Nhiễm trùng hô hấp trong 1 tháng',[['Không',0],['Có',17]]],['Thiếu máu (Hb ≤10 g/dL)',[['Không',0],['Có',11]]],['Đường rạch',[['Ngoại vi',0],['Bụng trên',15],['Trong lồng ngực',24]]],['Thời gian mổ',[['<2 giờ',0],['2–3 giờ',16],['>3 giờ',23]]],['Mổ cấp cứu',[['Không',0],['Có',8]]]],'aro',v=>{const n=v.reduce((a,b)=>a+b,0);return `Điểm <b>${n}</b> · nguy cơ <b>${n<26?'thấp (~1,6%)':n<45?'trung bình (~13,3%)':'cao (~42,1%)'}</b> biến chứng hô hấp`});
+chk('asp',['Mổ cấp cứu, chưa nhịn ăn đủ','Tắc ruột, nôn, liệt ruột','Trào ngược nặng hoặc thoát vị cánh','Thai kỳ (từ khoảng tuần 20)','Béo phì nặng','Đái tháo đường có liệt dạ dày','Opioid hoặc GLP-1 RA (semaglutide...)'],'aspo',n=>n==0?'Không có yếu tố nguy cơ được chọn':`<b>${n}</b> yếu tố: xem xét siêu âm dạ dày, khởi mê chuỗi nhanh (RSI) và đặt NKQ bảo vệ đường thở, thuốc kháng acid`);
+sel('cpg',[['Bilirubin (mg/dL)',[['<2',1],['2–3',2],['>3',3]]],['Albumin (g/dL)',[['>3,5',1],['2,8–3,5',2],['<2,8',3]]],['INR',[['<1,7',1],['1,7–2,3',2],['>2,3',3]]],['Cổ trướng',[['Không',1],['Nhẹ/kiểm soát được',2],['Vừa–nặng/kháng trị',3]]],['Bệnh não gan',[['Không',1],['Độ 1–2',2],['Độ 3–4',3]]]],'cpgo',v=>{const n=v.reduce((a,b)=>a+b,0);return `Điểm <b>${n}</b> · Child-Pugh <b>${n<=6?'A':n<=9?'B':'C'}</b><br><span style='font-size:13px'>Tử vong chu phẫu tham khảo (số liệu cũ): A ~10%, B ~30%, C ~80%. Child C: tránh mổ chương trình.</span>`});
+function meld(){const b=Math.max(1,+$('mb').value),i=Math.max(1,+$('mi').value),c=Math.min(4,Math.max(1,+$('mc').value)),na=Math.min(137,Math.max(125,+$('mn').value||137)),m=10*(0.957*Math.log(c)+0.378*Math.log(b)+1.12*Math.log(i)+0.643),mn=m+1.32*(137-na)-0.033*m*(137-na);$('mo').innerHTML=`MELD <b>${f(m,0)}</b> · MELD-Na <b>${f(mn,0)}</b> · ${m<10?'nguy cơ thấp':m<=15?'nguy cơ trung bình':'nguy cơ cao: cân nhắc hoãn mổ chương trình, tối ưu hóa, hội chẩn gan mật'}`}
+['mb','mi','mc','mn'].forEach(i=>$(i).oninput=meld);meld();
+const _c=calc;calc=function(){_c();drugs();inf();la();icuD()};
+["w","h","sx","age","grp","hi","hf","wb"].forEach(i=>$(i).oninput=calc);
+function grpSync(){const a=+$("age").value;$("grp").value=a<1?"80":a<=12?"70":$("sx").value=="m"?"75":"65"}
+["sx","age"].forEach(i=>$(i).addEventListener("input",()=>{grpSync();calc()}));grpSync();calc();
+document.querySelectorAll("label").forEach(l=>{const n=l.nextElementSibling;if(n&&n.id&&/^(INPUT|SELECT)$/.test(n.tagName))l.htmlFor=n.id});
+</script><script>if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+</body></html>
